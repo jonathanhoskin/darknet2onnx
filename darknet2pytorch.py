@@ -216,6 +216,7 @@ class Darknet(nn.Module):
                 outputs[ind] = None
             elif block['type'] == 'yolo':
                 boxes = self.models[ind](x)
+                boxes = boxes.permute(0,2,3,1)
                 out_boxes.append(boxes)
             elif block['type'] == 'cost':
                 continue
