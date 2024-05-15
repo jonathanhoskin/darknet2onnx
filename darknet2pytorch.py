@@ -215,11 +215,6 @@ class Darknet(nn.Module):
                     self.loss = self.models[ind](x)
                 outputs[ind] = None
             elif block['type'] == 'yolo':
-                # if self.training:
-                #     pass
-                # else:
-                #     boxes = self.models[ind](x)
-                #     out_boxes.append(boxes)
                 boxes = self.models[ind](x)
                 out_boxes.append(boxes)
             elif block['type'] == 'cost':
@@ -227,10 +222,7 @@ class Darknet(nn.Module):
             else:
                 print('unknown type %s' % (block['type']))
 
-        if self.training:
-            return out_boxes
-        else:
-            return get_region_boxes(out_boxes)
+        return out_boxes
 
     def print_network(self):
         print_cfg(self.blocks)
@@ -423,7 +415,10 @@ class Darknet(nn.Module):
                 # yolo_layer.coord_scale = float(block['coord_scale'])
                 out_filters.append(prev_filters)
                 out_strides.append(prev_stride)
-                models.append(yolo_layer)
+                # models.append(yolo_layer)
+                # Do not add yolo_layer to the model for conversion
+                # to stay compatible with XNNC's compilation
+                models.append(EmptyModule())
             else:
                 print('unknown type %s' % (block['type']))
 
@@ -482,55 +477,3 @@ class Darknet(nn.Module):
                 pass
             else:
                 print('unknown type %s' % (block['type']))
-
-    # def save_weights(self, outfile, cutoff=0):
-    #     if cutoff <= 0:
-    #         cutoff = len(self.blocks) - 1
-    #
-    #     fp = open(outfile, 'wb')
-    #     self.header[3] = self.seen
-    #     header = self.header
-    #     header.numpy().tofile(fp)
-    #
-    #     ind = -1
-    #     for blockId in range(1, cutoff + 1):
-    #         ind = ind + 1
-    #         block = self.blocks[blockId]
-    #         if block['type'] == 'convolutional':
-    #             model = self.models[ind]
-    #             batch_normalize = int(block['batch_normalize'])
-    #             if batch_normalize:
-    #                 save_conv_bn(fp, model[0], model[1])
-    #             else:
-    #                 save_conv(fp, model[0])
-    #         elif block['type'] == 'connected':
-    #             model = self.models[ind]
-    #             if block['activation'] != 'linear':
-    #                 save_fc(fc, model)
-    #             else:
-    #                 save_fc(fc, model[0])
-    #         elif block['type'] == 'maxpool':
-    #             pass
-    #         elif block['type'] == 'reorg':
-    #             pass
-    #         elif block['type'] == 'upsample':
-    #             pass
-    #         elif block['type'] == 'route':
-    #             pass
-    #         elif block['type'] == 'shortcut':
-    #             pass
-    #         elif block['type'] == 'sam':
-    #             pass
-    #         elif block['type'] == 'region':
-    #             pass
-    #         elif block['type'] == 'yolo':
-    #             pass
-    #         elif block['type'] == 'avgpool':
-    #             pass
-    #         elif block['type'] == 'softmax':
-    #             pass
-    #         elif block['type'] == 'cost':
-    #             pass
-    #         else:
-    #             print('unknown type %s' % (block['type']))
-    #     fp.close()
