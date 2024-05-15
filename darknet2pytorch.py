@@ -324,8 +324,9 @@ class Darknet(nn.Module):
                 prev_stride = prev_stride // stride
                 out_strides.append(prev_stride)
 
-                models.append(Upsample_expand(stride))
+                # models.append(Upsample_expand(stride))
                 # models.append(Upsample_interpolate(stride))
+                models.append(nn.Upsample(scale_factor=stride, mode='nearest'))
 
             elif block['type'] == 'route':
                 layers = block['layers'].split(',')
