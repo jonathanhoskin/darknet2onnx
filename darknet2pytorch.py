@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
@@ -75,6 +76,23 @@ class Upsample_interpolate(nn.Module):
         out = F.interpolate(x, size=(x.size(2) * self.stride, x.size(3) * self.stride), mode='nearest')
         return out
 
+@torch.library.custom_op("darknet::reorg", mutates_args=())
+def reorg_op(x:torch.Tensor, stride:int) -> torch.Tensor:
+    assert (x.data.dim() == 4)
+    B = x.data.size(0)
+    C = x.data.size(1)
+    H = x.data.size(2)
+    W = x.data.size(3)
+    assert (H % stride == 0)
+    assert (W % stride == 0)
+    ws = stride
+    hs = stride
+    x = x.view(B, C, H // hs, hs, W // ws, ws).transpose(3, 4).contiguous()
+    x = x.view(B, C, H // hs * W // ws, hs * ws).transpose(2, 3).contiguous()
+    x = x.view(B, C, hs * ws, H // hs, W // ws).transpose(1, 2).contiguous()
+    x = x.view(B, hs * ws * C, H // hs, W // ws)
+    return x
+
 
 class Reorg(nn.Module):
     def __init__(self, stride=2):
@@ -82,20 +100,7 @@ class Reorg(nn.Module):
         self.stride = stride
 
     def forward(self, x):
-        stride = self.stride
-        assert (x.data.dim() == 4)
-        B = x.data.size(0)
-        C = x.data.size(1)
-        H = x.data.size(2)
-        W = x.data.size(3)
-        assert (H % stride == 0)
-        assert (W % stride == 0)
-        ws = stride
-        hs = stride
-        x = x.view(B, C, H // hs, hs, W // ws, ws).transpose(3, 4).contiguous()
-        x = x.view(B, C, H // hs * W // ws, hs * ws).transpose(2, 3).contiguous()
-        x = x.view(B, C, hs * ws, H // hs, W // ws).transpose(1, 2).contiguous()
-        x = x.view(B, hs * ws * C, H // hs, W // ws)
+        x = reorg_op(x, self.stride)
         return x
 
 
@@ -208,6 +213,8 @@ class Darknet(nn.Module):
                 x = x1 * x2
                 outputs[ind] = x
             elif block['type'] == 'region':
+                boxes = x.permute(0,2,3,1)
+                out_boxes.append(boxes)
                 continue
                 if self.loss:
                     self.loss = self.loss + self.models[ind](x)

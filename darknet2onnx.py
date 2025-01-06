@@ -1,7 +1,23 @@
+import functools
 import sys
 import torch
 from darknet2pytorch import Darknet
+import torch.onnx.symbolic_helper as sym_help
+import torch.onnx.symbolic_opset11 as opset11
+from torch.onnx.symbolic_helper import parse_args, _unimplemented
+from torch.onnx._internal import jit_utils, registration
 
+_onnx_symbolic = functools.partial(registration.onnx_symbolic, opset=11)
+
+@_onnx_symbolic("darknet::reorg")
+@parse_args("v", "i")
+def onnx_space_to_depth(g: jit_utils.GraphContext, self, downscale_factor):
+    rank = sym_help._get_tensor_rank(self)
+    if rank is not None and rank != 4:
+        return sym_help._unimplemented("darknet_reorg", "only support 4d input")
+    return g.op("SpaceToDepth", self, blocksize_i=downscale_factor)
+
+opset11.darknet_reorg = onnx_space_to_depth
 
 def transform_to_onnx(cfgfile, weightfile, batch_size=1, onnx_file_name=None):
     model = Darknet(cfgfile)
