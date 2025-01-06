@@ -33,6 +33,10 @@
   whereas pytorch results in NCHW features, added a transpose in
   the end to create NHWC outputs - this transpose should be optimized
   away in the compilation of the model
+- Maps Reorg implementation in PyTorch which uses 6D reshapes and
+  transposes to perform Space to Depth operation with ONNX's native
+  SpaceToDepth op. (Tried PyTorch's PixelUnsqueeze which is numerically
+  not equivalent)
 
 ## Steps
 1. Install all standard dependencies of XNNC 3.x which includes python 3.10 and pytorch 2.0
