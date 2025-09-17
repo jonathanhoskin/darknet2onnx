@@ -1,0 +1,20 @@
+[project]
+name = "darknet2onnx"
+version = "0.1.0"
+description = "Convert Darknet models to ONNX format"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy<2.0",
+    "torch==2.4.1",
+    "torchvision==0.19.1",
+    "torchaudio==2.4.1",
+    "onnx",
+]
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv]
+dev-dependencies = []

@@ -38,13 +38,30 @@
   SpaceToDepth op. (Tried PyTorch's PixelUnsqueeze which is numerically
   not equivalent)
 
-## Steps
+## How to run in Docker
+
+The included Dockerfile can build a container which includes all dependencies. By default it runs the `python darknet2onnx.py` and takes the rest of the arguments from the command line.
+
+1. Build and test with:
+
+```sh
+docker build -t darknet2onnx .
+docker run darknet2onnx --help
+```
+
+2. Run export command with the model directory attached as a mounted volume:
+
+```sh
+# Assuming the local model directory is `./dnn_model`
+docker run -v ./dnn_model:/dnn_model darknet2onnx --batch_size 1 --onnx_file_path /dnn_model/yolov4.onnx /dnn_model/yolov4.cfg /dnn_model/yolov4.weights
+```
+
+## Steps to run manually
 1. Install all standard dependencies of XNNC 3.x which includes python 3.10 and pytorch 2.0
 2. Download weights and cfgs of YOLO v2/v3/v4 models (or their variants)
 3. Execute following command to execute conversion from darknet cfg/weights to onnx model
     - `python darknet2onnx.py <path-to-cfg> <path-to-weights> --batch_size 1 --onnx_file_path <path-to-onnx-model>`
     - For example: `python darknet2onnx.py darknet/cfg/yolov3-spp.cfg darknet/weights/yolov3-spp.weights --batch_size 1 --onnx_file_path yolov3-spp.onnx`
-
 
 # Reference & Citations
 - https://github.com/AlexeyAB/darknet
@@ -55,7 +72,7 @@
 
 ```
 @misc{bochkovskiy2020yolov4,
-      title={YOLOv4: Optimal Speed and Accuracy of Object Detection}, 
+      title={YOLOv4: Optimal Speed and Accuracy of Object Detection},
       author={Alexey Bochkovskiy and Chien-Yao Wang and Hong-Yuan Mark Liao},
       year={2020},
       eprint={2004.10934},
@@ -73,4 +90,3 @@
     pages     = {13029-13038}
 }
 ```
-
